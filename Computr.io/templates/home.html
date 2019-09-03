@@ -1,0 +1,63 @@
+{% extends 'layout.html' %}
+
+
+
+{% block body %}
+<div class="jumbotron text-center">
+<h1><b>Computr.io</b></h1>
+<hr></hr>
+<h1>Computer Repair Easy and Simple</h1>
+<p><i>Preformed by Local Qualified Technicians</i></p>
+</div>
+<div class="">
+  <table class="table ">
+    <thead class="thead-dark">
+      <tr>
+        <th scope="col" width="33%">Earn</th>
+        <th scope="col" width="33%">Support</th>
+        <th scope="col" width="33%">Parts</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="jumbotron">
+          <p><b>Get paid to use your computer skills!</b></p>
+          <hr></hr>
+          <p>Start your freelance career on the largest network of active clients!</p>
+          <button class="btn btn-primary">Sign up and get paid</button>
+          <p><a href="#">Learn more about becoming a Computr.io Technician</a></p>
+        </td>
+        <td class="jumbotron">
+          <p><b>Request support now!</b></p>
+          <hr></hr>
+          <p>Quick, fast and easy computer support at the tip of your fingers! Simply fillout the request form and get help!</p>
+          <p><a href="#">Learn more about how Computr.io works!</a></p>
+          <hr></hr>
+
+
+          {% from 'includes/_formhelpers.html' import render_field %}
+          <form method="POST" action="">
+          <div class="form-group">
+            {{render_field(form.zip, class_="form-control")}}
+          </div>
+          <div class="form-group">
+            {{form.support_Type(list="datalist")}}
+            <datalist id="datalist">
+              {% for entry in entries %}
+              <option value={{entry}}>
+                {%endfor%}
+            </datalist>
+          </div>
+          <p><input type="submit" name="" class = "btn btn-primary" value="Submit"></p>
+          </form>
+
+
+        </td>
+        <td class="jumbotron">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+{% endblock %}

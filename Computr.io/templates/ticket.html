@@ -1,0 +1,115 @@
+{% extends 'layout.html' %}
+{% block body %}
+{% from 'includes/_formhelpers.html' import render_field %}
+<style>
+  .circle {
+     width: 140px;
+     height: 140px;
+     background-image: url("static/{{pic}}");
+     -moz-border-radius: 70px;
+     -webkit-border-radius: 70px;
+     border-radius: 70px;
+     margin-left: auto;
+     margin-right: auto;
+     display: block;
+  }
+</style>
+
+
+<div class="jumbotron text-center">
+  <h1>Support Tickets</h1>
+<p><small>Welcome <b>{{session.username}}</b> </small></p>
+<div class="circle">
+</div>
+<hr></hr>
+<p>Please select your ticket for updates, and replies:</p>
+<table class="table ">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col" style="margin: auto;">Account Information</th>
+      <th scope="col"style="margin: auto;">Order Information</th>
+      <th scope="col"style="margin: auto;">Support Helpdesk</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Update Profile</button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <li><a class="dropdown-item" href="/account">Update Profile</a></li>
+            <li><a class="dropdown-item" href="#">Settings</a></li>
+            <li><a class="dropdown-item" href="#">Documents</a></li>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Order History</button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item" href="/history">Order History</a>
+            <a class="dropdown-item" href="/order">New Order</a>
+            <a class="dropdown-item" href="/history/active">Active Orders</a>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Frequent Questions</button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item" href="#">Frequent Questions</a>
+            <a class="dropdown-item" href="/ticket">Support Ticket</a>
+            <a class="dropdown-item" href="#">Phone Support</a>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<hr></hr>
+<table class="table table-striped">
+  <thead class="thead-light" style="font-size: 10px;">
+    <th scope="col" style="margin: auto;">Ticket #</th>
+    <th scope="col"style="margin: auto;">User ID</th>
+    <th scope="col"style="margin: auto;">Name</th>
+    <th scope="col" style="margin: auto;">Email</th>
+    <th scope="col"style="margin: auto;">Phone</th>
+    <th scope="col" style="margin: auto;">Issue</th>
+    <th scope="col"style="margin: auto;">Timestamp</th>
+  </thead>
+  <tbody style="font-size: 10px;">
+    {% for row in data %}
+    <tr>
+      <td><p class="para"><a href="/ticket/{{row['id']}}">{{row['id']}}</a></p></td>
+      <td><p class="para">{{row['userid']}}</p></td>
+      <td><p class="para">{{row['name']}}</p></td>
+      <td><p class="para">{{row['email']}}</p></td>
+      <td><p class="para">{{row['cell']}}</p></td>
+      <td><p class="para">{{row['issue']}}</p></td>
+      <td><p class="para">{{row['timestamp']}}</p></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  </table>
+  <p> Submit New Ticket</p>
+  <hr></hr>
+<form method="POST" action="">
+<div class="form-group">
+  {{render_field(form.name, class_="form-control")}}
+</div>
+<div class="form-group">
+  {{render_field(form.email, class_="form-control")}}
+</div>
+<div class="form-group">
+  {{render_field(form.username, class_="form-control")}}
+</div>
+<div class="form-group">
+  {{render_field(form.cell, class_="form-control")}}
+</div>
+<div class="form-group">
+  {{render_field(form.issue, class_="form-control")}}
+</div>
+<p><input type="submit" name="" class = "btn btn-primary" value="Submit"></p>
+</form>
+
+{% endblock %}
