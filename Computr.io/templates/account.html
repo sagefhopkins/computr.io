@@ -64,10 +64,12 @@
   </tbody>
 </table>
 <hr></hr>
-<form method="POST" action=""  enctype="multipart/form-data">
+<form method="POST" action=""  enctype="multipart/form-data" >
 <div class="form-group">
-<label for="inputFile"> Profile Image</label>
-<input type="file" name="inputFile">
+<p>Name: <input type="text" name="name" class="form-control" value= {{request.form.name}}></p>
+<p>Country: <input type="text" name="country" class="form-control" value= {{request.form.country}}></p>
+<p>Biography: <textarea class="form-control" name="bio" rows="8" cols="80" value= {{request.form.bio}}></textarea></p>
+<p>Profile Image: <input type="file" name="inputFile" class="form-control"></p>
 </div>
 <p><input type="submit" name="inputFile" class = "btn btn-primary" value="Submit"></p>
 </form>

@@ -1,5 +1,4 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, logging, request, Response, make_response
-from data import Articles
 from flask_mysqldb import MySQL
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators, FileField
 from passlib.hash import sha256_crypt
@@ -252,6 +251,9 @@ def account():
         userid = data['id']
 
     if request.method == 'POST':
+        name = request.form['name']
+        country = request.form['country']
+        bio = request.form['bio']
         file = request.files['inputFile']
         #Process image into 100 base width by percentage to keep aspect ratio
         basewidth = 100
@@ -261,7 +263,7 @@ def account():
         img = img.resize((basewidth, hsize), PIL.Image.ANTIALIAS)
         #Pull userid from database
         #Directory to save static profile images to
-        save_Dir = ("C:\\Users\\Sage Hopkins\\Documents\\Development\\Projects\\Computr.io\\static\\profiles\\" + str(userid))
+        save_Dir = ("C:\\Users\\Sage Hopkins\\Documents\\GitHub\\computr.io\\Computr.io\\static\\profiles\\" + str(userid))
 
         if os.path.exists(save_Dir) != True:
             os.mkdir(save_Dir)
@@ -270,7 +272,7 @@ def account():
 
         img.save(save_Dir + "\\" + str(userid) + ".jpg", format="jpeg")
 
-        cur.execute("INSERT INTO profiles(userid , image) VALUES(%s, %s)", (userid, "profiles" + "/" + str(userid) + "/" + str(userid) + ".jpg"))
+        cur.execute("INSERT INTO profiles(userid , image, bio, name, country) VALUES(%s, %s, %s, %s, %s)", (userid, "profiles" + "/" + str(userid) + "/" + str(userid) + ".jpg", bio, name, country))
         mysql.connection.commit()
         flash("Profile picture succesfully updated!", "success")
         cur.close()
@@ -390,30 +392,16 @@ def dashboard():
         city = data['city']
         state= data['state']
         zip= data['zip']
-        result_2 = cur.execute("SELECT * FROM orders WHERE userid=%s", [userid])
 
-        #Populate table in open order information
-        """
-        if result_2 > 0:
-            data = cur.fetchall()
-            for row in data:
-                orderid = row['id']
-                issue = row['issue']
-                computer = row['computer']
-                time = row['timestamp']
-                support_Type = row['support_Type']
-                app.logger.info(orderid, issue, computer, time, support_Type)
-        else:
-            pass
-            """
+    result_2 = cur.execute("SELECT * FROM profiles WHERE userid=%s", [userid])
+    if result_2 > 0:
+        profile = cur.fetchone()
     else:
-        pass
+        flash("No data found", "danger")
 
 
 
-
-
-    return render_template('dashboard.html', street=street, city=city, state=state, zip=zip, userid=userid, pic=profile_Image(userid))
+    return render_template('dashboard.html', street=street, city=city, state=state, zip=zip, userid=userid, pic=profile_Image(userid), data=profile)
 
 @app.route('/history')
 @is_logged_in
