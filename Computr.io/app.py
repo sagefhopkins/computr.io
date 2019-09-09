@@ -9,26 +9,29 @@ import base64
 import PIL
 from PIL import Image
 
+#Application Config below
+#<------------------------->
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-
 #Mysql config
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'computr.io'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+#init mysql
+mysql = MySQL(app)
 
-
-
-
+#Non app route functions
+#<----------------------->
 #Function used to check if session is logged in to ensure orders are created with a logged in account
 def is_logged_in_for_order(zip, support_Type):
-        if 'logged_in' in session:
-            return True
-        else:
-            flash("Unauthorized, please login", "danger")
-            return redirect(url_for('login', zip=zip, support_Type=support_Type))
+    if 'logged_in' in session:
+        return True
+    else:
+        flash("Unauthorized, please login", "danger")
+        return redirect(url_for('login', zip=zip, support_Type=support_Type))
+
 #Function used to check if a session is active before accessing dashboard
 def is_logged_in(f):
     @wraps(f)
@@ -40,29 +43,33 @@ def is_logged_in(f):
             return redirect(url_for('login'))
     return wrap
 
-#init mysql
-mysql = MySQL(app)
+#Function used to define and check permissions for accessing different applications
+def permission(permission):
+    if 'logged_in' in session:
+        if permission in session <= perm_Value:
+            print('wors')
+        else:
+            flash("Unauthorized, please login", "danger")
+            return redirect(url_for('home'))
+    else:
+        flash("Unauthorized, please login", "danger")
+        return redirect(url_for('home'))
 
-#Classifies the order form on index page
+#Function used to fetch profile pictures by userid
+def profile_Image(userid):
+    cur = mysql.connection.cursor()
+    result = cur.execute("SELECT image from profiles WHERE userid=%s", [userid])
+    if result > 0:
+        data = cur.fetchone()
+        profile_Pic = data['image']
+        return str(profile_Pic)
+
+#Class used for generating order form on Home page
 class orderForm(Form):
     zip = StringField('Zip Code', [validators.Length(min=5, max=9)])
     support_Type = StringField('Support Type', [validators.DataRequired()])
-#Index page
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    form = orderForm(request.form)
-    if request.method == "POST" and form.validate():
-        #Creates order form on index page
-        zip = form.zip.data
-        support_Type = form.support_Type.data
 
-        flash("Order being placed, please continue your order after redirect!", "success")
-        #Redirects to finalize order
-        return redirect(url_for('order', zip=zip, support_Type=support_Type))
-
-    return render_template('home.html', form=form, entries=["Home", "Remote", "Center", "Unsure"])
-
-#Final order form
+#Class used for generating final order form on Order page
 class finalOrderForm(Form):
     support_Type = StringField("Support Type", [validators.DataRequired()])
     name = StringField("Name", [validators.DataRequired()])
@@ -77,6 +84,56 @@ class finalOrderForm(Form):
     computer = StringField("Computer Make and Model", [validators.DataRequired()])
     operating_System = StringField("Operating System", [validators.DataRequired()])
 
+#Class used for generating ticket form on Ticket page
+class ticketForm(Form):
+    name = StringField('Name', [validators.Length(min=1, max=50)])
+    username = StringField('Username', [validators.Length(min=4, max=25)])
+    email = StringField('Email', [validators.Length(min=6, max=100)])
+    cell = StringField("Cell Phone Number", [validators.Length(min=10, max=10)])
+    issue = TextAreaField("Describe Your Issue", [validators.DataRequired()])
+
+#Class used for generating registration page
+class RegisterForm(Form):
+    name = StringField('Name', [validators.Length(min=1, max=50)])
+    username = StringField('Username', [validators.Length(min=4, max=25)])
+    email = StringField('Email', [validators.Length(min=6, max=100)])
+    password = PasswordField('Password', [validators.DataRequired(), validators.EqualTo('confirm', message='Passwords do not match!')])
+    confirm = PasswordField('Confirm Password')
+    street_address = StringField("Street Address", [validators.Length(min=10, max=100)])
+    city = StringField("City", [validators.Length(min=3, max=100)])
+    state = StringField("State", [validators.Length(min=4, max=25)])
+    zip = StringField("Zip Code", [validators.Length(min=5, max=10)])
+    phone = StringField("Phone Number", [validators.Length(min=10, max=10)])
+    cell = StringField("Cell Phone Number", [validators.Length(min=10, max=10)])
+
+#Basic information, and entry pages below
+#<--------------------------------------->
+#App route used to generate Home page
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    form = orderForm(request.form)
+    if request.method == "POST" and form.validate():
+        #Creates order form on index page
+        zip = form.zip.data
+        support_Type = form.support_Type.data
+        flash("Order being placed, please continue your order after redirect!", "success")
+        #Redirects to finalize order
+        return redirect(url_for('order', zip=zip, support_Type=support_Type))
+    return render_template('home.html', form=form, entries=["Home", "Remote", "Center", "Unsure"])
+
+#App route used to generate About page
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+#App route used to generate FAQ page
+@app.route('/faq')
+def faq():
+    return render_template('faq.html')
+
+#Order information, and pages below
+#<----------------------------------->
+#App route used to create order from new order page
 @app.route('/order', methods=['GET', 'POST'])
 def orderM():
     username = session['username']
@@ -162,28 +219,51 @@ def order(zip, support_Type):
             mysql.connection.commit()
             cur.close()
             flash("Success", "success")
-
         return render_template('order.html', form=form, entries=["Home", "Remote", "Center", "Unsure"], os=["Windows", "Mac", "Linux"])
     else:
         return redirect(url_for('login_With_Order', zip=zip, support_Type=support_Type))
-#About page
-@app.route('/about')
-def about():
-    return render_template('about.html')
-#Frequently asked questions page
-@app.route('/faq')
-def faq():
-    return render_template('faq.html')
 
-class ticketForm(Form):
-    name = StringField('Name', [validators.Length(min=1, max=50)])
-    username = StringField('Username', [validators.Length(min=4, max=25)])
-    email = StringField('Email', [validators.Length(min=6, max=100)])
-    cell = StringField("Cell Phone Number", [validators.Length(min=10, max=10)])
-    issue = TextAreaField("Describe Your Issue", [validators.DataRequired()])
+#App route used to generate page for reviewing order history
+@app.route('/history')
+@is_logged_in
+def history():
+    cur = mysql.connection.cursor()
+    username = session['username']
+    result = cur.execute("SELECT * FROM users WHERE username=%s", [username])
+    if result > 0:
+        data = cur.fetchone()
+        userid = data['id']
+        result = cur.execute("SELECT * FROM orders WHERE userid=%s", [userid])
+        if result > 0:
+            data = cur.fetchall()
+        else:
+            flash("No orders found! Please contact support if you believe this is an error", "danger")
+    else:
+        flash("No userid found when searching username: " + username + ". Please contact support if you believe this is an error", "danger")
+    return render_template('history.html', data=data, pic=profile_Image(userid))
 
+#App route used to generate page from reviewing active order history
+@app.route('/history/active')
+@is_logged_in
+def history_Active():
+    cur = mysql.connection.cursor()
+    username = session['username']
+    result = cur.execute("SELECT * FROM users WHERE username=%s", [username])
+    if result > 0:
+        data = cur.fetchone()
+        userid = data['id']
+        result = cur.execute("SELECT * FROM orders WHERE status='active' AND userid=%s", [userid])
+        if result > 0:
+            data = cur.fetchall()
+        else:
+            flash("No orders found! Please contact support if you believe this is an error", "danger")
+    else:
+        flash("No userid found when searching username: " + username + ". Please contact support if you believe this is an error", "danger")
+    return render_template('history.html', data=data, pic=profile_Image(userid))
 
-
+#Support pages below
+#<------------------->
+#App route used to generate support tickets
 @app.route('/ticket', methods=['GET', 'POST'])
 @is_logged_in
 def ticket():
@@ -208,39 +288,15 @@ def ticket():
         email = form.email.data
         cell = form.cell.data
         issue = form.issue.data
-
         cur.execute("INSERT into tickets(userid, name, username, email, cell, issue) VALUES(%s,%s,%s,%s,%s,%s)", (userid, name, username, email, cell, issue))
         mysql.connection.commit()
         flash("Support ticket succesfully submitted, please wait 24 business hours for your ticket to be reviewed and responded to!", "success")
 
     return render_template('ticket.html', pic=profile_Image(userid), form=form, data=ticket_Data)
 
-
-
-#Registration form
-class RegisterForm(Form):
-    name = StringField('Name', [validators.Length(min=1, max=50)])
-    username = StringField('Username', [validators.Length(min=4, max=25)])
-    email = StringField('Email', [validators.Length(min=6, max=100)])
-    password = PasswordField('Password', [validators.DataRequired(), validators.EqualTo('confirm', message='Passwords do not match!')])
-    confirm = PasswordField('Confirm Password')
-    street_address = StringField("Street Address", [validators.Length(min=10, max=100)])
-    city = StringField("City", [validators.Length(min=3, max=100)])
-    state = StringField("State", [validators.Length(min=4, max=25)])
-    zip = StringField("Zip Code", [validators.Length(min=5, max=10)])
-    phone = StringField("Phone Number", [validators.Length(min=10, max=10)])
-    cell = StringField("Cell Phone Number", [validators.Length(min=10, max=10)])
-
-#Function used to fetch profile pictures by userid
-def profile_Image(userid):
-    cur = mysql.connection.cursor()
-    result = cur.execute("SELECT image from profiles WHERE userid=%s", [userid])
-    if result > 0:
-        data = cur.fetchone()
-        profile_Pic = data['image']
-        return str(profile_Pic)
-
-#Account settings page, allows uploads of profile images, and updates of biographies
+#Account pages below
+#<------------------>
+#App route used to generate account page used for editing profile images, bio, country, etc...
 @app.route('/account', methods=['GET', 'POST'])
 def account():
     username = session['username']
@@ -249,7 +305,6 @@ def account():
     if result > 0:
         data = cur.fetchone()
         userid = data['id']
-
     if request.method == 'POST':
         name = request.form['name']
         country = request.form['country']
@@ -264,21 +319,18 @@ def account():
         #Pull userid from database
         #Directory to save static profile images to
         save_Dir = ("C:\\Users\\Sage Hopkins\\Documents\\GitHub\\computr.io\\Computr.io\\static\\profiles\\" + str(userid))
-
         if os.path.exists(save_Dir) != True:
             os.mkdir(save_Dir)
         else:
             pass
-
         img.save(save_Dir + "\\" + str(userid) + ".jpg", format="jpeg")
-
         cur.execute("INSERT INTO profiles(userid , image, bio, name, country) VALUES(%s, %s, %s, %s, %s)", (userid, "profiles" + "/" + str(userid) + "/" + str(userid) + ".jpg", bio, name, country))
         mysql.connection.commit()
         flash("Profile picture succesfully updated!", "success")
         cur.close()
-
     return render_template('account.html', pic=profile_Image(userid))
-#Registration page
+
+#App route used to generate Registration page
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm(request.form)
@@ -293,30 +345,23 @@ def register():
         zip = form.zip.data
         phone = form.phone.data
         cell = form.cell.data
-
         #SQL Cursor
         cur = mysql.connection.cursor()
-
         cur.execute("INSERT INTO users(name, email, username, password, street, city, state, zip, phone, cell) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (name, email, username, password, street, city, state, zip, phone, cell))
         mysql.connection.commit()
-
         cur.close()
-
         flash("You've been succesfully registered to Computr.io!", "success")
-
         return redirect(url_for('index'))
     return render_template('register.html', form=form)
-#Login page
+
+#App route used to generate login page
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password_candidate = request.form['password']
-
         cur = mysql.connection.cursor()
-
         result = cur.execute("SELECT * FROM  users WHERE username=%s", [username])
-
         if result > 0:
             data = cur.fetchone()
             password = data['password']
@@ -324,7 +369,6 @@ def login():
                 app.logger.info(username + ' password autheticated!')
                 session['logged_in'] = True
                 session['username'] = username
-
                 flash('You are now logged in', 'success')
                 return redirect(url_for('dashboard'))
             else:
@@ -336,19 +380,16 @@ def login():
             error = 'Username not found!'
             app.logger.info(username + ' does not exist!')
             return render_template('login.html', error=error)
-
     return render_template('login.html')
-#Login page used to pass information for an order that was attempted to be placed before user was logged into their account
+
+#App route used to generate login page, when an order is placed from home page, and passes information along
 @app.route('/login/<string:zip>/<string:support_Type>', methods=['GET', 'POST'])
 def login_With_Order(zip, support_Type):
     if request.method == 'POST':
         username = request.form['username']
         password_candidate = request.form['password']
-
         cur = mysql.connection.cursor()
-
         result = cur.execute("SELECT * FROM  users WHERE username=%s", [username])
-
         if result > 0:
             data = cur.fetchone()
             password = data['password']
@@ -356,7 +397,6 @@ def login_With_Order(zip, support_Type):
                 app.logger.info(username + ' password autheticated!')
                 session['logged_in'] = True
                 session['username'] = username
-
                 flash('You are now logged in', 'success')
                 return redirect(url_for('order', zip=zip, support_Type=support_Type))
             else:
@@ -368,17 +408,16 @@ def login_With_Order(zip, support_Type):
             error = 'Username not found!'
             app.logger.info(username + ' does not exist!')
             return render_template('login.html', error=error)
-
     return render_template('login.html')
 
-
-#Logout page
+#App route used to generate logout page
 @app.route('/logout')
 def logout():
     session.clear()
     flash("You've been logged out!", 'success')
     return redirect(url_for('index'))
-#Dashboard page
+
+#App route used to generate dashboard page
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
@@ -392,55 +431,12 @@ def dashboard():
         city = data['city']
         state= data['state']
         zip= data['zip']
-
     result_2 = cur.execute("SELECT * FROM profiles WHERE userid=%s", [userid])
     if result_2 > 0:
         profile = cur.fetchone()
     else:
         flash("No data found", "danger")
-
-
-
     return render_template('dashboard.html', street=street, city=city, state=state, zip=zip, userid=userid, pic=profile_Image(userid), data=profile)
-
-@app.route('/history')
-@is_logged_in
-def history():
-    cur = mysql.connection.cursor()
-    username = session['username']
-    result = cur.execute("SELECT * FROM users WHERE username=%s", [username])
-    if result > 0:
-        data = cur.fetchone()
-        userid = data['id']
-        result = cur.execute("SELECT * FROM orders WHERE userid=%s", [userid])
-        if result > 0:
-            data = cur.fetchall()
-        else:
-            flash("No orders found! Please contact support if you believe this is an error", "danger")
-    else:
-        flash("No userid found when searching username: " + username + ". Please contact support if you believe this is an error", "danger")
-
-    return render_template('history.html', data=data, pic=profile_Image(userid))
-
-
-@app.route('/history/active')
-@is_logged_in
-def history_Active():
-    cur = mysql.connection.cursor()
-    username = session['username']
-    result = cur.execute("SELECT * FROM users WHERE username=%s", [username])
-    if result > 0:
-        data = cur.fetchone()
-        userid = data['id']
-        result = cur.execute("SELECT * FROM orders WHERE status='active' AND userid=%s", [userid])
-        if result > 0:
-            data = cur.fetchall()
-        else:
-            flash("No orders found! Please contact support if you believe this is an error", "danger")
-    else:
-        flash("No userid found when searching username: " + username + ". Please contact support if you believe this is an error", "danger")
-
-    return render_template('history.html', data=data, pic=profile_Image(userid))
 
 if __name__ == '__main__':
     app.secret_key='secret123'
