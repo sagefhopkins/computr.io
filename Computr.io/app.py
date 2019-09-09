@@ -43,17 +43,39 @@ def is_logged_in(f):
             return redirect(url_for('login'))
     return wrap
 
+#Function  used to pull userid from session Username
+def get_userid():
+    cur = mysql.connection.cursor()
+    result = cur.execute("SELECT id FROM users WHERE username=%s", [session['username']])
+    if result >0:
+        data = cur.fetchone()
+        userid = data['id']
+        return userid
+    else:
+        flash("Userid was not found, please login to continue", "danger")
+
 #Function used to define and check permissions for accessing different applications
-def permission(permission):
+def permission():
     if 'logged_in' in session:
-        if permission in session <= perm_Value:
-            print('wors')
+        cur = mysql.connection.cusor()
+        result = cur.execute("SELECT permission FROM users where userid=%s", [get_userid()])
+        if result >0:
+            data = cur.fetchone()
+            perm = data['permission']
+            return perm
         else:
-            flash("Unauthorized, please login", "danger")
+            flash("No permission value found, please try again!", "danger")
             return redirect(url_for('home'))
     else:
         flash("Unauthorized, please login", "danger")
         return redirect(url_for('home'))
+
+#Function used to check if user meets permission minimum
+def permCheck(required_Value):
+    if permission() >= required_Value:
+        return True
+    else:
+        return False
 
 #Function used to fetch profile pictures by userid
 def profile_Image(userid):
@@ -175,7 +197,7 @@ def orderM():
         mysql.connection.commit()
         cur.close()
         flash("Success", "success")
-    return render_template('order.html', form=form, entries=["Home", "Remote", "Center", "Unsure"], os=["Windows", "Mac", "Linux"], pic=profile_Image(userid))
+    return render_template('order.html', form=form, entries=["Home", "Remote", "Center", "Unsure"], os=["Windows", "Mac", "Linux"], pic=profile_Image(get_userid()))
 
 #Function used to redirect orders which began being placed while not logged into an account
 @app.route('/order/<string:zip>/<string:support_Type>', methods=['GET', 'POST'])
@@ -228,38 +250,24 @@ def order(zip, support_Type):
 @is_logged_in
 def history():
     cur = mysql.connection.cursor()
-    username = session['username']
-    result = cur.execute("SELECT * FROM users WHERE username=%s", [username])
+    result = cur.execute("SELECT * FROM orders WHERE userid=%s", [get_userid()])
     if result > 0:
-        data = cur.fetchone()
-        userid = data['id']
-        result = cur.execute("SELECT * FROM orders WHERE userid=%s", [userid])
-        if result > 0:
-            data = cur.fetchall()
-        else:
-            flash("No orders found! Please contact support if you believe this is an error", "danger")
+        data = cur.fetchall()
     else:
-        flash("No userid found when searching username: " + username + ". Please contact support if you believe this is an error", "danger")
-    return render_template('history.html', data=data, pic=profile_Image(userid))
+        flash("No orders found! Please contact support if you believe this is an error", "danger")
+    return render_template('history.html', data=data, pic=profile_Image(get_userid()))
 
 #App route used to generate page from reviewing active order history
 @app.route('/history/active')
 @is_logged_in
 def history_Active():
     cur = mysql.connection.cursor()
-    username = session['username']
-    result = cur.execute("SELECT * FROM users WHERE username=%s", [username])
+    result = cur.execute("SELECT * FROM orders WHERE status='active' AND userid=%s", [get_userid()])
     if result > 0:
-        data = cur.fetchone()
-        userid = data['id']
-        result = cur.execute("SELECT * FROM orders WHERE status='active' AND userid=%s", [userid])
-        if result > 0:
-            data = cur.fetchall()
-        else:
-            flash("No orders found! Please contact support if you believe this is an error", "danger")
+        data = cur.fetchall()
     else:
-        flash("No userid found when searching username: " + username + ". Please contact support if you believe this is an error", "danger")
-    return render_template('history.html', data=data, pic=profile_Image(userid))
+        flash("No orders found! Please contact support if you believe this is an error", "danger")
+    return render_template('history.html', data=data, pic=profile_Image(get_userid()))
 
 #Support pages below
 #<------------------->
@@ -269,15 +277,11 @@ def history_Active():
 def ticket():
     form = ticketForm(request.form)
     cur = mysql.connection.cursor()
-    result = cur.execute("SELECT * FROM users WHERE username=%s", [session['username']])
+    result = cur.execute("SELECT * FROM tickets WHERE userid=%s", [get_userid()])
     if result > 0:
-        data = cur.fetchone()
-        userid = data['id']
-        result = cur.execute("SELECT * FROM tickets WHERE userid=%s", [userid])
-        if result > 0:
-            ticket_Data = cur.fetchall()
-        else:
-            flash("No support tickets detected!", "danger")
+        ticket_Data = cur.fetchall()
+    else:
+        flash("No support tickets detected!", "danger")
         form.name.data = data['name']
         form.username.data = data['username']
         form.email.data = data['email']
@@ -292,19 +296,15 @@ def ticket():
         mysql.connection.commit()
         flash("Support ticket succesfully submitted, please wait 24 business hours for your ticket to be reviewed and responded to!", "success")
 
-    return render_template('ticket.html', pic=profile_Image(userid), form=form, data=ticket_Data)
+    return render_template('ticket.html', pic=profile_Image(get_userid()), form=form, data=ticket_Data)
 
 #Account pages below
 #<------------------>
 #App route used to generate account page used for editing profile images, bio, country, etc...
 @app.route('/account', methods=['GET', 'POST'])
 def account():
-    username = session['username']
     cur = mysql.connection.cursor()
-    result = cur.execute("SELECT * FROM users WHERE username=%s", [username])
-    if result > 0:
-        data = cur.fetchone()
-        userid = data['id']
+    userid = get_userid()
     if request.method == 'POST':
         name = request.form['name']
         country = request.form['country']
