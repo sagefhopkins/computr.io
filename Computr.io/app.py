@@ -51,8 +51,10 @@ def get_userid():
         data = cur.fetchone()
         userid = data['id']
         return userid
+        cur.close()
     else:
         flash("Userid was not found, please login to continue", "danger")
+        cur.close()
 
 #Function used to define and check permissions for accessing different applications
 def permission():
@@ -63,12 +65,15 @@ def permission():
             data = cur.fetchone()
             perm = data['permission']
             return perm
+            cur.close()
         else:
             flash("No permission value found, please try again!", "danger")
             return redirect(url_for('home'))
+            cur.close()
     else:
         flash("Unauthorized, please login", "danger")
         return redirect(url_for('home'))
+        cur.close()
 
 #Function used to check if user meets permission minimum
 def permCheck(required_Value):
@@ -198,6 +203,23 @@ def orderM():
         cur.close()
         flash("Success", "success")
     return render_template('order.html', form=form, entries=["Home", "Remote", "Center", "Unsure"], os=["Windows", "Mac", "Linux"], pic=profile_Image(get_userid()))
+
+def orderInformation(id):
+    cur = mysql.connection.cursor()
+    order = cur.execute("SELECT * FROM orders WHERE id=%s", [id])
+    writeup = cur.execute("SELECT * FROM order_writeups WHERE orderid=%s", [id])
+    write = cur.fetchall()
+    orderData=cur.fetchall()
+
+@app.route('/order/check/<string:id>', methods=['GET', 'POST'])
+@is_logged_in
+def checkOrder(id):
+    cur = mysql.connection.cursor()
+    result = cur.execute("SELECT * FROM orders WHERE id=%s", [id])
+    orderData = cur.fetchall()
+    writeUp = cur.execute("SELECT * FROM order_writeups WHERE orderid=%s", [id])
+    write = cur.fetchall()
+    return render_template('check.html', data=orderData, writeUps=write, pic=profile_Image(get_userid()))
 
 #Function used to redirect orders which began being placed while not logged into an account
 @app.route('/order/<string:zip>/<string:support_Type>', methods=['GET', 'POST'])
