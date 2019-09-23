@@ -132,6 +132,70 @@ class RegisterForm(Form):
     zip = StringField("Zip Code", [validators.Length(min=5, max=10)])
     phone = StringField("Phone Number", [validators.Length(min=10, max=10)])
     cell = StringField("Cell Phone Number", [validators.Length(min=10, max=10)])
+class writeUpForm(Form):
+    fault = TextAreaField('Fault', [validators.Length(min=1, max=500)])
+    corrective = TextAreaField('Corrective', [validators.Length(min=1, max=500)])
+
+#Technition Pages below
+#<--------------------------------------->
+#App route used to generate technian Dashboard
+@app.route('/tech/dashboard')
+@is_logged_in
+def techDashboard():
+    cur = mysql.connection.cursor()
+    username = session['username']
+    result = cur.execute("SELECT * FROM users WHERE username=%s", [username])
+    if result > 0:
+        data = cur.fetchone()
+        userid = data['id']
+        street = data['street']
+        city = data['city']
+        state= data['state']
+        zip= data['zip']
+    result_2 = cur.execute("SELECT * FROM profiles WHERE userid=%s", [userid])
+    if result_2 > 0:
+        profile = cur.fetchone()
+    else:
+        flash("No data found", "danger")
+    return render_template('techDashboard.html', street=street, city=city, state=state, zip=zip, userid=userid, pic=profile_Image(userid), data=profile)
+
+@app.route('/tech/history')
+@is_logged_in
+def techHistory():
+    cur = mysql.connection.cursor()
+    result = cur.execute("SELECT * FROM orders WHERE assignedid=%s", [get_userid()])
+    data = cur.fetchall()
+    return render_template('techHistory.html', data=data, pic=profile_Image(get_userid()))
+
+@app.route('/tech/history/active')
+@is_logged_in
+def techHistoryActive():
+    cur = mysql.connection.cursor()
+    result = cur.execute("SELECT * FROM orders WHERE status='active' AND assignedid=%s", [get_userid()])
+    data = cur.fetchall()
+    return render_template('techHistory.html', data=data, pic=profile_Image(get_userid()))
+
+@app.route('/tech/check/<string:id>', methods=['GET', 'POST'])
+@is_logged_in
+def techCheckOrder(id):
+    form = writeUpForm(request.form)
+    cur = mysql.connection.cursor()
+    result = cur.execute("SELECT * FROM orders WHERE id=%s", [id])
+    orderData = cur.fetchall()
+    writeUp = cur.execute("SELECT * FROM order_writeups WHERE orderid=%s", [id])
+    write = cur.fetchall()
+
+    if request.method == "POST":
+        cur = mysql.connection.cursor()
+        fault = form.fault.data
+        corrective = form.corrective.data
+        cur.execute("INSERT INTO order_writeups(orderid, fault, corrective) VALUES (%s, %s, %s)", ([id], fault, corrective))
+        mysql.connection.commit()
+        cur.close()
+        redirect(url_for('techCheckOrder', id=id))
+
+    return render_template('techCheck.html', form=form, data=orderData, writeUps=write, pic=profile_Image(get_userid()))
+
 
 #Basic information, and entry pages below
 #<--------------------------------------->

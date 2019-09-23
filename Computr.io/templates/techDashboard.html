@@ -1,0 +1,79 @@
+{% extends 'layout.html' %}
+{% block body %}
+<style>
+  .circle {
+     width: 140px;
+     height: 140px;
+     background-image: url("../../static/{{pic}}");
+     -moz-border-radius: 70px;
+     -webkit-border-radius: 70px;
+     border-radius: 70px;
+     margin-left: auto;
+     margin-right: auto;
+     display: block;
+  }
+</style>
+
+
+<div class="jumbotron text-center">
+  <h1>Technician Dashboard</h1>
+<p><small>Welcome <b>{{session.username}}</b> </small></p>
+<div class="circle">
+</div>
+<hr></hr>
+<p>{{data['name']}}</p>
+<p>{{data['bio']}}</p>
+<p>{{data['country']}}</p>
+
+
+
+<!--
+<p>Street: {{street}}</p>
+<p>City: {{city}}</p>
+<p>State: {{state}}</p>
+<p>Zip Code: {{zip}}</p>
+-->
+<table class="table ">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col" style="margin: auto;">Account Information</th>
+      <th scope="col"style="margin: auto;">Job Information</th>
+      <th scope="col"style="margin: auto;">Support Helpdesk</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Update Profile</button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <li><a class="dropdown-item" href="/account">Update Profile</a></li>
+            <li><a class="dropdown-item" href="#">Settings</a></li>
+            <li><a class="dropdown-item" href="#">Documents</a></li>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Job History</button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item" href="/tech/history">Job History</a>
+            <a class="dropdown-item" href="/tech/history/active">Active Jobs</a>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Frequent Questions</button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item" href="#">Frequent Questions</a>
+            <a class="dropdown-item" href="/ticket">Support Ticket</a>
+            <a class="dropdown-item" href="#">Phone Support</a>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</div>
+{% endblock %}
