@@ -159,6 +159,34 @@ def techDashboard():
         flash("No data found", "danger")
     return render_template('techDashboard.html', street=street, city=city, state=state, zip=zip, userid=userid, pic=profile_Image(userid), data=profile)
 
+@app.route('/tech/offers')
+@is_logged_in
+def techOffer():
+    cur = mysql.connection.cursor()
+    result = cur.execute("SELECT * FROM orders WHERE status='offer'",)
+    offerData = cur.fetchall()
+    return render_template('techoffers.html', data=offerData, pic=profile_Image(get_userid()))
+
+@app.route('/tech/offers/<string:id>', methods=['GET', 'POST'])
+@is_logged_in
+def techOfferInspect(id):
+    cur = mysql.connection.cursor()
+    result = cur.execute("SELECT * FROM orders WHERE id=%s", [id])
+    orderData = cur.fetchall()
+    cur.close()
+
+    if request.method == "POST":
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE orders set status=%s WHERE id=%s", ("active", id))
+        mysql.connection.commit()
+        cur.close()
+        return redirect(url_for('techOffer'))
+    else:
+        flash("Error has occurred!", "danger")
+
+    return render_template('techoffersinspect.html', data=orderData, pic=profile_Image(get_userid()))
+
+
 @app.route('/tech/history')
 @is_logged_in
 def techHistory():
@@ -192,7 +220,7 @@ def techCheckOrder(id):
         cur.execute("INSERT INTO order_writeups(orderid, fault, corrective) VALUES (%s, %s, %s)", ([id], fault, corrective))
         mysql.connection.commit()
         cur.close()
-        redirect(url_for('techCheckOrder', id=id))
+        return redirect(url_for('techCheckOrder', id=id))
 
     return render_template('techCheck.html', form=form, data=orderData, writeUps=write, pic=profile_Image(get_userid()))
 
@@ -262,7 +290,7 @@ def orderM():
         computer = form.computer.data
         operating_System = form.operating_System.data
         support_Type = form.support_Type.data
-        cur.execute("INSERT INTO orders(userid, name, email, phone, street, city, state, country, issue, support_Type, computer, operating_System) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (userid, name, email, phone, address, city, state, country, issue, support_Type, computer, operating_System))
+        cur.execute("INSERT INTO orders(userid, name, email, phone, street, city, state, country, issue, support_Type, computer, operating_System, status) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (userid, name, email, phone, address, city, state, country, issue, support_Type, computer, operating_System, "offer"))
         mysql.connection.commit()
         cur.close()
         flash("Success", "success")
@@ -323,7 +351,7 @@ def order(zip, support_Type):
             computer = form.computer.data
             operating_System = form.operating_System.data
             support_Type = form.support_Type.data
-            cur.execute("INSERT INTO orders(userid, name, email, phone, street, city, state, country, issue, support_Type, computer, operating_System) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (userid, name, email, phone, address, city, state, country, issue, support_Type, computer, operating_System))
+            cur.execute("INSERT INTO orders(userid, name, email, phone, street, city, state, country, issue, support_Type, computer, operating_System, status) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (userid, name, email, phone, address, city, state, country, issue, support_Type, computer, operating_System, "offer"))
             mysql.connection.commit()
             cur.close()
             flash("Success", "success")
@@ -348,7 +376,7 @@ def history():
 @is_logged_in
 def history_Active():
     cur = mysql.connection.cursor()
-    result = cur.execute("SELECT * FROM orders WHERE status='active' AND userid=%s", [get_userid()])
+    result = cur.execute("SELECT * FROM orders WHERE (status='active' AND userid=%s) OR (status='offer' AND userid=%s)", ([get_userid()], [get_userid()]))
     if result > 0:
         data = cur.fetchall()
     else:

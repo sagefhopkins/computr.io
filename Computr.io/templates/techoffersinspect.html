@@ -1,5 +1,7 @@
 {% extends 'layout.html' %}
 {% block body %}
+{% from 'includes/_formhelpers.html' import render_field %}
+
 <style>
   .circle {
      width: 140px;
@@ -19,6 +21,17 @@
     text-overflow: ellipsis;
     max-width: 10ch;
 }
+.column {
+  float: left;
+  width: 50%;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
 </style>
 
 
@@ -28,7 +41,7 @@
 <div class="circle">
 </div>
 <hr></hr>
-<p>Please select the Order # of the order you wish to view!</p>
+<p>Here is information about your order!</p>
 
 <!--
 <p>Street: {{street}}</p>
@@ -40,7 +53,7 @@
   <thead class="thead-dark">
     <tr>
       <th scope="col" style="margin: auto;">Account Information</th>
-      <th scope="col"style="margin: auto;">Job Information</th>
+      <th scope="col"style="margin: auto;">Order Information</th>
       <th scope="col"style="margin: auto;">Support Helpdesk</th>
     </tr>
   </thead>
@@ -79,44 +92,36 @@
     </tr>
   </tbody>
 </table>
-<table class="table table-striped">
-  <thead class="thead-light" style="font-size: 10px;">
-    <th scope="col" style="margin: auto;">Order #</th>
-    <th scope="col"style="margin: auto;">User ID</th>
-    <th scope="col"style="margin: auto;">Name</th>
-    <th scope="col" style="margin: auto;">Email</th>
-    <th scope="col"style="margin: auto;">Phone</th>
-    <th scope="col"style="margin: auto;">Street</th>
-    <th scope="col" style="margin: auto;">City</th>
-    <th scope="col"style="margin: auto;">State</th>
-    <th scope="col"style="margin: auto;">Country</th>
-    <th scope="col" style="margin: auto;">Issue</th>
-    <th scope="col"style="margin: auto;">Support Type</th>
-    <th scope="col"style="margin: auto;">Computer Model</th>
-    <th scope="col" style="margin: auto;">Operating System</th>
-    <th scope="col"style="margin: auto;">Timestamp</th>
-  </thead>
-  <tbody style="font-size: 10px;">
-    {% for row in data %}
-    <tr>
-      <td><p class="para"><a href="/tech/check/{{row['id']}}">{{row['id']}}</a></p></td>
-      <td><p class="para">{{row['userid']}}</p></td>
-      <td><p class="para">{{row['name']}}</p></td>
-      <td><p class="para">{{row['email']}}</p></td>
-      <td><p class="para">{{row['phone']}}</p></td>
-      <td><p class="para">{{row['street']}}</p></td>
-      <td><p class="para">{{row['city']}}</p></td>
-      <td><p class="para">{{row['state']}}</p></td>
-      <td><p class="para">{{row['country']}}</p></td>
-      <td><p class="para">{{row['issue']}}</p></td>
-      <td><p class="para">{{row['support_Type']}}</p></td>
-      <td><p class="para">{{row['computer']}}</p></td>
-      <td><p class="para">{{row['operating_System']}}</p></td>
-      <td><p class="para">{{row['timestamp']}}</p></td>
-    </tr>
-    {% endfor %}
-  </tbody>
-  </table>
+<hr></hr>
+<u><h4>Order Information:</h4></u>
+{%for row in data %}
+<div style="font-size: 10px;" class="row">
+  <div class="column" align="left">
+  <p><b>Order ID:</b> {{row['id']}}</p>
+  <p><b>Userid:</b> {{row['userid']}}</p>
+  <p><b>Name:</b> {{row['name']}}</p>
+  <p><b>Email:</b> {{row['email']}}</p>
+  <p><b>Phone #:</b> {{row['phone']}}</p>
+  <p><b>Street:</b> {{row['street']}}</p>
+  <p><b>City:</b> {{row['city']}}</p>
+  <p><b>State:</b> {{row['state']}}</p>
+  </div>
+  <div class="column" align="left">
+  <p><b>Country:</b> {{row['country']}}</p>
+  <p><b>Issue:</b> {{row['issue']}}</p>
+  <p><b>Support Type:</b> {{row['support_Type']}}</p>
+  <p><b>Computer Model:</b> {{row['computer']}}</p>
+  <p><b>Operating System:</b> {{row['operating_System']}}</p>
+  <p><b>Status:</b> {{row['status']}}</p>
+  <p><b>Date Submitted:</b> {{row['timestamp']}}</p>
+  </div>
+</div>
+{% endfor %}
+  <hr></hr>
+  <form method="POST" action="">
+  <p><input type="submit" name="" class = "btn btn-primary" value="Submit"></p>
+  </form>
+  </div>
 
 </div>
 {% endblock %}
