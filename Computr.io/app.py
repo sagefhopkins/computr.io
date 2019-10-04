@@ -7,6 +7,7 @@ import os
 from io import BytesIO
 import base64
 import PIL
+import pgeocode
 from PIL import Image
 
 #Application Config below
@@ -91,6 +92,12 @@ def profile_Image(userid):
         profile_Pic = data['image']
         return str(profile_Pic)
 
+def zipcode(offerzip, techzip):
+    dist = pgeocode.GeoDistance('us')
+    distance = dist.query_postal_code(offerzip, techzip)
+    distance = (distance/1.609)
+    return round(distance)
+
 #Class used for generating order form on Home page
 class orderForm(Form):
     zip = StringField('Zip Code', [validators.Length(min=5, max=9)])
@@ -162,9 +169,30 @@ def techDashboard():
 @app.route('/tech/offers')
 @is_logged_in
 def techOffer():
+    int = 0
     cur = mysql.connection.cursor()
     result = cur.execute("SELECT * FROM orders WHERE status='offer'",)
-    offerData = cur.fetchall()
+    offerData = list(cur.fetchall())
+    result_2 = cur.execute("SELECT * FROM users WHERE username=%s", [session['username']])
+    techData = cur.fetchall()
+    techZip = techData[0]['zip']
+    for row in offerData:
+        offerZip = row['zip']
+        if zipcode(offerZip, techZip) > 100:
+            print("------DELETED--------")
+            print(offerData[int]['id'])
+            print(int)
+            print(offerData[int])
+            print("-------------------------")
+            del offerData[int]
+            int = int + 1
+        else:
+            print("---------SAVE-------------")
+            print(offerData[int]['id'])
+            print(int)
+            print(offerData[int])
+            int = int + 1
+            print("-------------------------")
     return render_template('techoffers.html', data=offerData, pic=profile_Image(get_userid()))
 
 @app.route('/tech/offers/<string:id>', methods=['GET', 'POST'])
@@ -172,7 +200,7 @@ def techOffer():
 def techOfferInspect(id):
     cur = mysql.connection.cursor()
     result = cur.execute("SELECT * FROM orders WHERE id=%s", [id])
-    orderData = cur.fetchall()
+    orderData = cur.fetchone()
     cur.close()
 
     if request.method == "POST":
@@ -182,7 +210,7 @@ def techOfferInspect(id):
         cur.close()
         return redirect(url_for('techOffer'))
     else:
-        flash("Error has occurred!", "danger")
+        pass
 
     return render_template('techoffersinspect.html', data=orderData, pic=profile_Image(get_userid()))
 
@@ -284,13 +312,14 @@ def orderM():
         city = form.city.data
         state = form.state.data
         country = form.country.data
+        zipcode = form.zip.data
         phone = form.phone.data
         email = form.email.data
         issue = form.issue.data
         computer = form.computer.data
         operating_System = form.operating_System.data
         support_Type = form.support_Type.data
-        cur.execute("INSERT INTO orders(userid, name, email, phone, street, city, state, country, issue, support_Type, computer, operating_System, status) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (userid, name, email, phone, address, city, state, country, issue, support_Type, computer, operating_System, "offer"))
+        cur.execute("INSERT INTO orders(userid, name, email, phone, street, city, state, country, zip, issue, support_Type, computer, operating_System, status) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (userid, name, email, phone, address, city, state, country, zipcode, issue, support_Type, computer, operating_System, "offer"))
         mysql.connection.commit()
         cur.close()
         flash("Success", "success")
@@ -345,13 +374,14 @@ def order(zip, support_Type):
             city = form.city.data
             state = form.state.data
             country = form.country.data
+            zipcode = form.zip.data
             phone = form.phone.data
             email = form.email.data
             issue = form.issue.data
             computer = form.computer.data
             operating_System = form.operating_System.data
             support_Type = form.support_Type.data
-            cur.execute("INSERT INTO orders(userid, name, email, phone, street, city, state, country, issue, support_Type, computer, operating_System, status) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (userid, name, email, phone, address, city, state, country, issue, support_Type, computer, operating_System, "offer"))
+            cur.execute("INSERT INTO orders(userid, name, email, phone, street, city, state, country, zip, issue, support_Type, computer, operating_System, status) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (userid, name, email, phone, address, city, state, country, zipcode, issue, support_Type, computer, operating_System, "offer"))
             mysql.connection.commit()
             cur.close()
             flash("Success", "success")

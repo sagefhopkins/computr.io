@@ -10,6 +10,7 @@ os
 io
 base64
 pillow
+pgeocode
 
 # Easy setup
 

@@ -9,3 +9,4 @@ passlib==1.7.1
 Pillow==6.1.0
 Werkzeug==0.15.5
 WTForms==2.2.1
+pgeocode==0.1.2

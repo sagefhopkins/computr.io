@@ -94,32 +94,31 @@
 </table>
 <hr></hr>
 <u><h4>Order Information:</h4></u>
-{%for row in data %}
+
 <div style="font-size: 10px;" class="row">
   <div class="column" align="left">
-  <p><b>Order ID:</b> {{row['id']}}</p>
-  <p><b>Userid:</b> {{row['userid']}}</p>
-  <p><b>Name:</b> {{row['name']}}</p>
-  <p><b>Email:</b> {{row['email']}}</p>
-  <p><b>Phone #:</b> {{row['phone']}}</p>
-  <p><b>Street:</b> {{row['street']}}</p>
-  <p><b>City:</b> {{row['city']}}</p>
-  <p><b>State:</b> {{row['state']}}</p>
+  <p><b>Order ID:</b> {{data['id']}}</p>
+  <p><b>Userid:</b> {{data['userid']}}</p>
+  <p><b>Name:</b> {{data['name']}}</p>
+  <p><b>Email:</b> {{data['email']}}</p>
+  <p><b>Phone #:</b> {{data['phone']}}</p>
+  <p><b>Street:</b> {{data['street']}}</p>
+  <p><b>City:</b> {{data['city']}}</p>
+  <p><b>State:</b> {{data['state']}}</p>
   </div>
   <div class="column" align="left">
-  <p><b>Country:</b> {{row['country']}}</p>
-  <p><b>Issue:</b> {{row['issue']}}</p>
-  <p><b>Support Type:</b> {{row['support_Type']}}</p>
-  <p><b>Computer Model:</b> {{row['computer']}}</p>
-  <p><b>Operating System:</b> {{row['operating_System']}}</p>
-  <p><b>Status:</b> {{row['status']}}</p>
-  <p><b>Date Submitted:</b> {{row['timestamp']}}</p>
+  <p><b>Country:</b> {{data['country']}}</p>
+  <p><b>Issue:</b> {{data['issue']}}</p>
+  <p><b>Support Type:</b> {{data['support_Type']}}</p>
+  <p><b>Computer Model:</b> {{data['computer']}}</p>
+  <p><b>Operating System:</b> {{data['operating_System']}}</p>
+  <p><b>Status:</b> {{data['status']}}</p>
+  <p><b>Date Submitted:</b> {{data['timestamp']}}</p>
   </div>
 </div>
-{% endfor %}
   <hr></hr>
   <form method="POST" action="">
-  <p><input type="submit" name="" class = "btn btn-primary" value="Submit"></p>
+  <p><input type="submit" name="" class = "btn btn-primary" value="Accept Offer"></p>
   </form>
   </div>
 
