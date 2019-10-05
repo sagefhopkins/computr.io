@@ -395,10 +395,7 @@ def order(zip, support_Type):
 def history():
     cur = mysql.connection.cursor()
     result = cur.execute("SELECT * FROM orders WHERE userid=%s", [get_userid()])
-    if result > 0:
-        data = cur.fetchall()
-    else:
-        flash("No orders found! Please contact support if you believe this is an error", "danger")
+    data = cur.fetchall()
     return render_template('history.html', data=data, pic=profile_Image(get_userid()))
 
 #App route used to generate page from reviewing active order history
@@ -407,10 +404,7 @@ def history():
 def history_Active():
     cur = mysql.connection.cursor()
     result = cur.execute("SELECT * FROM orders WHERE (status='active' AND userid=%s) OR (status='offer' AND userid=%s)", ([get_userid()], [get_userid()]))
-    if result > 0:
-        data = cur.fetchall()
-    else:
-        flash("No orders found! Please contact support if you believe this is an error", "danger")
+    data = cur.fetchall()
     return render_template('history.html', data=data, pic=profile_Image(get_userid()))
 
 #Support pages below
@@ -422,25 +416,18 @@ def ticket():
     form = ticketForm(request.form)
     cur = mysql.connection.cursor()
     result = cur.execute("SELECT * FROM tickets WHERE userid=%s", [get_userid()])
-    if result > 0:
-        ticket_Data = cur.fetchall()
-    else:
-        flash("No support tickets detected!", "danger")
-        form.name.data = data['name']
-        form.username.data = data['username']
-        form.email.data = data['email']
-        form.cell.data = data['cell']
+    data = cur.fetchall()
     if request.method == 'POST':
         name = form.name.data
         username = form.username.data
         email = form.email.data
         cell = form.cell.data
         issue = form.issue.data
-        cur.execute("INSERT into tickets(userid, name, username, email, cell, issue) VALUES(%s,%s,%s,%s,%s,%s)", (userid, name, username, email, cell, issue))
+        cur.execute("INSERT into tickets(userid, name, username, email, cell, issue) VALUES(%s,%s,%s,%s,%s,%s)", (get_userid(), name, username, email, cell, issue))
         mysql.connection.commit()
         flash("Support ticket succesfully submitted, please wait 24 business hours for your ticket to be reviewed and responded to!", "success")
 
-    return render_template('ticket.html', pic=profile_Image(get_userid()), form=form, data=ticket_Data)
+    return render_template('ticket.html', pic=profile_Image(get_userid()), form=form, data=data)
 
 #Account pages below
 #<------------------>
@@ -493,6 +480,10 @@ def register():
         cur = mysql.connection.cursor()
         cur.execute("INSERT INTO users(name, email, username, password, street, city, state, zip, phone, cell) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (name, email, username, password, street, city, state, zip, phone, cell))
         mysql.connection.commit()
+        result =  cur.execute("SELECT * FROM users WHERE username=%s", [username])
+        data = cur.fetchall()
+
+        cur.execute("INSERT INTO profiles(userid, name) VALUES (%s, %s)", (data[0]['id'], name))
         cur.close()
         flash("You've been succesfully registered to Computr.io!", "success")
         return redirect(url_for('index'))
@@ -568,18 +559,14 @@ def dashboard():
     cur = mysql.connection.cursor()
     username = session['username']
     result = cur.execute("SELECT * FROM users WHERE username=%s", [username])
-    if result > 0:
-        data = cur.fetchone()
-        userid = data['id']
-        street = data['street']
-        city = data['city']
-        state= data['state']
-        zip= data['zip']
+    data = cur.fetchone()
+    userid = data['id']
+    street = data['street']
+    city = data['city']
+    state= data['state']
+    zip= data['zip']
     result_2 = cur.execute("SELECT * FROM profiles WHERE userid=%s", [userid])
-    if result_2 > 0:
-        profile = cur.fetchone()
-    else:
-        flash("No data found", "danger")
+    profile = cur.fetchone()
     return render_template('dashboard.html', street=street, city=city, state=state, zip=zip, userid=userid, pic=profile_Image(userid), data=profile)
 
 if __name__ == '__main__':
