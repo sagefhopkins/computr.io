@@ -449,12 +449,12 @@ def account():
         img = img.resize((basewidth, hsize), PIL.Image.ANTIALIAS)
         #Pull userid from database
         #Directory to save static profile images to
-        save_Dir = ("C:\\Users\\Sage Hopkins\\Documents\\GitHub\\computr.io\\Computr.io\\static\\profiles\\" + str(userid))
+        save_Dir = ("static/profiles/" + str(userid))
         if os.path.exists(save_Dir) != True:
             os.mkdir(save_Dir)
         else:
             pass
-        img.save(save_Dir + "\\" + str(userid) + ".jpg", format="jpeg")
+        img.save(save_Dir + "/" + str(userid) + ".jpg", format="jpeg")
         cur.execute("INSERT INTO profiles(userid , image, bio, name, country) VALUES(%s, %s, %s, %s, %s)", (userid, "profiles" + "/" + str(userid) + "/" + str(userid) + ".jpg", bio, name, country))
         mysql.connection.commit()
         flash("Profile picture succesfully updated!", "success")
