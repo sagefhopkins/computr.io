@@ -25,7 +25,7 @@ To create a new database:
 	  `state` varchar(50) DEFAULT NULL,
       `zip` varchar(5) DEFAULT NULL,
 	  `country` varchar(50) DEFAULT NULL,
-	  `issue` varchar(50) DEFAULT NULL,
+	  `issue` varchar(5000) DEFAULT NULL,
 	  `support_Type` varchar(1000) DEFAULT NULL,
 	  `computer` varchar(50) DEFAULT NULL,
 	  `operating_System` varchar(25) DEFAULT NULL,
@@ -80,3 +80,14 @@ To create a new database:
         CURRENT_TIMESTAMP,
         PRIMARY KEY (`id`)
     ); 
+
+## order writeups ##
+
+	CREATE TABLE `order_writeups` (
+		`id` int(11) NOT NULL AUTO_INCREMENT,
+		`orderid` int(11) DEFAULT NULL,
+		`fault` varchar(5000) DEFAULT NULL,
+		`corrective` varchar(5000) DEFAULT NULL,
+		`timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+		PRIMARY KEY(`id`)
+		);
