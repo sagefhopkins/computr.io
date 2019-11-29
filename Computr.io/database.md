@@ -15,6 +15,7 @@ To create a new database:
 
 	CREATE TABLE `orders` (
 	  `id` int(11) NOT NULL AUTO_INCREMENT,
+	  `assignedid` int(11) DEFAULT NULL,
 	  `userid` int(11) DEFAULT NULL,
 	  `name` varchar(50) DEFAULT NULL,
 	  `email` varchar(50) DEFAULT NULL,
